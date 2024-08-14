@@ -1,7 +1,5 @@
 package BellIntegrator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,14 +8,12 @@ import java.util.Map;
 
 @RestController
 public class ApplicationController {
-    private Logger log = LoggerFactory.getLogger(Application.class);
-    private Map<String, Integer> counter = new HashMap<>();
 
-    private Map<String, SomeAbstractUser[]> someMap = new HashMap<>();
+    private final Map<String, SomeAbstractUser[]> someMap = new HashMap<>();
 
     @GetMapping("/test")
     public Map<String, SomeAbstractUser[]> get1() {
-        SomeAbstractUser users[] = new SomeAbstractUser[100];
+        SomeAbstractUser[] users = new SomeAbstractUser[100];
         for (int i = 0; i < 100; i++) {
             users[i] = new SomeAbstractUser(i);
         }
