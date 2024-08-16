@@ -1,5 +1,7 @@
 package BellIntegrator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,37 +10,28 @@ import java.util.Map;
 
 @RestController
 public class ApplicationController {
+    private final KafkaProducerService producerService;
 
-    private final Map<String, SomeAbstractUser[]> someMap = new HashMap<>();
-
-    @GetMapping("/test")
-    public Map<String, SomeAbstractUser[]> get1() {
-        SomeAbstractUser[] users = new SomeAbstractUser[100];
-        for (int i = 0; i < 100; i++) {
-            users[i] = new SomeAbstractUser(i);
-        }
-        someMap.put("data", users);
-        return someMap;
+    public ApplicationController(KafkaProducerService producerService) {
+        this.producerService = producerService;
     }
 
-    @PostMapping("/test")
-    public Map<String, SomeAbstractUser[]> post1(@RequestBody Map<String, Integer> countObj) {
-        if (countObj.size() == 1) {
-            int count = countObj.entrySet().stream().findFirst().get().getValue();
-            SomeAbstractUser[] users = new SomeAbstractUser[count];
-            for (int i = 0; i < count; i++) {
-                users[i] = new SomeAbstractUser(i);
-            }
-            someMap.put("data", users);
-            return someMap;
+    @PostMapping("post-message")
+    public void postMessage(HttpServletRequest request, HttpServletResponse response, @RequestBody Map<String, Integer> posted_body) {
+        long unixTime = System.currentTimeMillis();
+        int value = posted_body.get("msg_id");
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+        String strToReturn = "{" +
+                "\"msg_id\":" + value + "," +
+                "\"timestamp\":" + unixTime + "," +
+                "\"method\":" + "\"" + method + "\"," +
+                "\"uri\":" + "\"" + uri + "\"" +
+                "}";
+        if (producerService.sendMessage(strToReturn)) {
+            response.setStatus(200);
         } else {
-            throw new CustomException("Invalid body of JSON");
+            response.setStatus(500);
         }
-    }
-
-    @GetMapping("test/teapot")
-    @ResponseStatus(HttpStatus.I_AM_A_TEAPOT)
-    public String get2() {
-        return "{\"response\": \"I'm a teapot -_@\"}";
     }
 }
